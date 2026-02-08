@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CityScape Hustle | Build. Hustle. Own the City.</title>
+    <meta name="description" content="CityScape Hustle - The ultimate Web3 city-building game. Own land, trade assets, build businesses, and hustle your way to the top in a neon-soaked metropolis.">
+    
+    <!-- Solana Web3 -->
+    <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        display: ['Orbitron', 'sans-serif'],
+                        body: ['Rajdhani', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            dark: '#0a0a0f',
+                            darker: '#050508',
+                            panel: '#12121a',
+                            border: '#2a2a3a',
+                        },
+                        neon: {
+                            purple: '#b026ff',
+                            blue: '#00d9ff',
+                            pink: '#ff00ff',
+                            cyan: '#00ffff',
+                        }
+                    },
+                    animation: {
+                        'pulse-glow': 'pulseGlow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                        'scan': 'scan 4s linear infinite',
+                    },
+                    keyframes: {
+                        pulseGlow: {
+                            '0%, 100%': { boxShadow: '0 0 20px rgba(176, 38, 255, 0.5)' },
+                            '50%': { boxShadow: '0 0 40px rgba(176, 38, 255, 0.8)' },
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        },
+                        scan: {
+                            '0%': { transform: 'translateY(-100%)' },
+                            '100%': { transform: 'translateY(100%)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            background: #0a0a0f;
+            color: #e0e0e0;
+            font-family: 'Rajdhani', sans-serif;
+        }
+        
+        .font-display { font-family: 'Orbitron', sans-serif; }
+        
+        /* Neon Effects */
+        .neon-text {
+            text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 40px currentColor;
+        }
+        
+        .neon-border {
+            box-shadow: 0 0 10px rgba(176, 38, 255, 0.5), inset 0 0 10px rgba(176, 38, 255, 0.1);
+        }
+        
+        .neon-blue {
+            text-shadow: 0 0 10px #00d9ff, 0 0 20px #00d9ff;
+        }
+        
+        /* Glassmorphism */
+        .glass {
+            background: rgba(18, 18, 26, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .glass-panel {
+            background: linear-gradient(135deg, rgba(18, 18, 26, 0.9) 0%, rgba(10, 10, 15, 0.95) 100%);
+            border: 1px solid rgba(176, 38, 255, 0.2);
+            box-shadow: 0 0 30px rgba(176, 38, 255, 0.1);
+        }
+        
+        /* Grid Background */
+        .grid-bg {
+            background-image: 
+                linear-gradient(rgba(176, 38, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(176, 38, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0a0a0f;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #b026ff;
+            border-radius: 4px;
+        }
+        
+        /* Card Hover */
+        .nft-card {
+            transition: all 0.3s ease;
+        }
+        .nft-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 40px rgba(176, 38, 255, 0.3);
+        }
+        
+        /* Button Styles */
+        .btn-primary {
+            background: linear-gradient(135deg, #b026ff 0%, #7c1fa6 100%);
+            border: 1px solid rgba(176, 38, 255, 0.5);
+            box-shadow: 0 0 20px rgba(176, 38, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            box-shadow: 0 0 30px rgba(176, 38, 255, 0.6);
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid #00d9ff;
+            color: #00d9ff;
+            box-shadow: 0 0 10px rgba(0, 217, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        .btn-secondary:hover {
+            background: rgba(0, 217, 255, 0.1);
+            box-shadow: 0 0 20px rgba(0, 217, 255, 0.4);
+        }
+        
+        /* Loading Animation */
+        .loader {
+            border: 3px solid rgba(176, 38, 255, 0.1);
+            border-left-color: #b026ff;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        /* Toast Notification */
+        .toast {
+            transform: translateX(400px);
+            transition: transform 0.3s ease-out;
+        }
+        .toast.show { transform: translateX(0); }
+        
+        /* Map Interactive */
+        .map-zone {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .map-zone:hover {
+            fill: rgba(176, 38, 255, 0.4);
+            filter: drop-shadow(0 0 10px #b026ff);
+        }
+        
+        /* Filter Checkbox */
+        .filter-check:checked + div {
+            background: rgba(176, 38, 255, 0.2);
+            border-color: #b026ff;
+        }
+        
+        /* Hide scrollbar for horizontal scroll */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<base target="_blank">
+</head>
+<body class="antialiased overflow-x-hidden">
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="fixed top-24 right-6 z-50 flex flex-col gap-2"></div>
+
+    <!-- Transaction Modal -->
+    <div id="txModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm">
+        <div class="glass-panel rounded-2xl p-8 max-w-md w-full mx-4 border border-neon-purple/30">
+            <div class="text-center">
+                <div class="loader mx-auto mb-4"></div>
+                <h3 class="text-xl font-display font-bold text-white mb-2">Processing Transaction</h3>
+                <p class="text-gray-400 mb-4">Confirm in your Phantom wallet...</p>
+                <div class="bg-brand-dark rounded-lg p-3 font-mono text-xs text-gray-500 break-all" id="txStatus">Waiting for signature...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-40 glass border-b border-white/10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex items-center gap-3 cursor-pointer" onclick="showSection('home')">
+                    <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-neon-purple to-neon-blue flex items-center justify-center shadow-lg shadow-neon-purple/30">
+                        <span class="font-display font-bold text-white text-xl">C</span>
+                    </div>
+                    <div class="hidden sm:block">
+                        <h1 class="font-display font-bold text-xl text-white tracking-wider">CITYSCAPE</h1>
+                        <p class="text-xs text-neon-blue -mt-1 tracking-widest">HUSTLE</p>
+                    </div>
+                </div>
+
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex items-center gap-1">
+                    <button onclick="showSection('home')" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium text-gray-300 hover:text-white hover:bg-white/5 transition-all">Home</button>
+                    <button onclick="showSection('marketplace')" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium text-gray-300 hover:text-white hover:bg-white/5 transition-all">Marketplace</button>
+                    <button onclick="showSection('collection')" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium text-gray-300 hover:text-white hover:bg-white/5 transition-all">My Collection</button>
+                    <button onclick="showSection('map')" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium text-gray-300 hover:text-white hover:bg-white/5 transition-all">Map</button>
+                    <button onclick="showSection('game')" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium text-gray-300 hover:text-white hover:bg-white/5 transition-all">Game</button>
+                </div>
+
+                <!-- Wallet Section -->
+                <div class="flex items-center gap-3">
+                    <div id="networkBadge" class="hidden px-2 py-1 rounded bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 text-xs font-mono">DEVNET</div>
+                    
+                    <button id="connectBtn" onclick="toggleWallet()" class="btn-primary px-6 py-2 rounded-full text-white font-medium text-sm flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                        Connect Wallet
+                    </button>
+
+                    <div id="walletInfo" class="hidden relative">
+                        <button onclick="toggleWalletDropdown()" class="glass px-4 py-2 rounded-full flex items-center gap-2 border border-neon-purple/30 hover:border-neon-purple/60 transition-all">
+                            <div class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+                            <span class="font-mono text-sm text-white" id="walletAddress">0x...</span>
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </button>
+                        
+                        <!-- Dropdown -->
+                        <div id="walletDropdown" class="hidden absolute right-0 mt-2 w-72 glass-panel rounded-xl border border-neon-purple/20 shadow-2xl overflow-hidden z-50">
+                            <div class="p-4 border-b border-white/10">
+                                <p class="text-xs text-gray-500 uppercase tracking-wider mb-2">Balance</p>
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="text-sm text-gray-400">SOL</span>
+                                    <span class="font-mono text-white font-bold" id="solBalance">0.00</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-gray-400">$BORI</span>
+                                    <span class="font-mono text-neon-blue font-bold">0.00</span>
+                                </div>
+                            </div>
+                            <div class="p-2">
+                                <button onclick="viewExplorer()" class="w-full text-left px-3 py-2 rounded-lg hover:bg-white/5 text-sm text-gray-300 flex items-center gap-2 transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                                    View on Explorer
+                                </button>
+                                <button onclick="disconnectWallet()" class="w-full text-left px-3 py-2 rounded-lg hover:bg-red-500/10 text-sm text-red-400 flex items-center gap-2 transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                                    Disconnect
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mobile Menu Button -->
+                    <button onclick="toggleMobileMenu()" class="md:hidden p-2 rounded-lg hover:bg-white/5">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div id="mobileMenu" class="hidden md:hidden glass border-t border-white/10">
+            <div class="px-4 py-2 space-y-1">
+                <button onclick="showSection('home')" class="w-full text-left px-4 py-3 rounded-lg text-gray-300 hover:text-white hover:bg-white/5">Home</button>
+                <button onclick="showSection('marketplace')" class="w-full text-left px-4 py-3 rounded-lg text-gray-300 hover:text-white hover:bg-white/5">Marketplace</button>
+                <button onclick="showSection('collection')" class="w-full text-left px-4 py-3 rounded-lg text-gray-300 hover:text-white hover:bg-white/5">My Collection</button>
+                <button onclick="showSection('map')" class="w-full text-left px-4 py-3 rounded-lg text-gray-300 hover:text-white hover:bg-white/5">Map</button>
+                <button onclick="showSection('game')" class="w-full text-left px-4 py-3 rounded-lg text-gray-300 hover:text-white hover:bg-white/5">Game</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Container -->
+    <main class="pt-16 min-h-screen">
+
+        <!-- HOME SECTION -->
+        <section id="home" class="section active">
+            <!-- Hero -->
+            <div class="relative min-h-[90vh] flex items-center justify-center overflow-hidden grid-bg">
+                <div class="absolute inset-0 bg-gradient-to-b from-transparent via-brand-dark/50 to-brand-dark"></div>
+                
+                <!-- Animated Background Elements -->
+                <div class="absolute top-20 left-10 w-72 h-72 bg-neon-purple/20 rounded-full blur-3xl animate-pulse"></div>
+                <div class="absolute bottom-20 right-10 w-96 h-96 bg-neon-blue/20 rounded-full blur-3xl animate-pulse" style="animation-delay: 1s;"></div>
+
+                <div class="relative z-10 text-center px-4 max-w-5xl mx-auto">
+                    <div class="mb-8 animate-float">
+                        <div class="inline-block p-1 rounded-2xl bg-gradient-to-r from-neon-purple via-neon-blue to-neon-purple neon-border">
+                            <div class="bg-brand-darker rounded-2xl p-8 md:p-12">
+                                <h1 class="font-display text-5xl md:text-7xl lg:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-neon-purple to-neon-blue mb-4 tracking-tight">
+                                    CITYSCAPE<br/>HUSTLE
+                                </h1>
+                                <p class="text-xl md:text-2xl text-gray-400 font-light tracking-widest uppercase">Build. Hustle. Own the City.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p class="text-lg md:text-xl text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed">
+                        The ultimate Web3 metropolis where you own the streets, trade exclusive assets, and build your empire in a neon-soaked cyberpunk world.
+                    </p>
+
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                        <button onclick="showSection('marketplace')" class="btn-primary px-8 py-4 rounded-full text-white font-display font-bold text-lg flex items-center justify-center gap-2">
+                            Enter Marketplace
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                        </button>
+                        <button onclick="showSection('game')" class="btn-secondary px-8 py-4 rounded-full font-display font-bold text-lg">
+                            Play Demo
+                        </button>
+                    </div>
+
+                    <!-- Stats -->
+                    <div class="mt-16 grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto">
+                        <div class="glass rounded-xl p-4 border border-white/5">
+                            <p class="text-2xl font-display font-bold text-neon-purple">2.5K+</p>
+                            <p class="text-xs text-gray-400 uppercase tracking-wider">Land Owners</p>
+                        </div>
+                        <div class="glass rounded-xl p-4 border border-white/5">
+                            <p class="text-2xl font-display font-bold text-neon-blue">15K+</p>
+                            <p class="text-xs text-gray-400 uppercase tracking-wider">NFTs Traded</p>
+                        </div>
+                        <div class="glass rounded-xl p-4 border border-white/5">
+                            <p class="text-2xl font-display font-bold text-neon-pink">$2.4M</p>
+                            <p class="text-xs text-gray-400 uppercase tracking-wider">Volume</p>
+                        </div>
+                        <div class="glass rounded-xl p-4 border border-white/5">
+                            <p class="text-2xl font-display font-bold text-white">8.9K</p>
+                            <p class="text-xs text-gray-400 uppercase tracking-wider">Players</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Features -->
+            <div class="py-20 px-4 max-w-7xl mx-auto">
+                <h2 class="font-display text-3xl md:text-4xl font-bold text-center mb-12 text-white">Core <span class="text-neon-purple">Features</span></h2>
+                
+                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="glass-panel rounded-2xl p-6 hover:scale-105 transition-transform cursor-pointer group">
+                        <div class="w-14 h-14 rounded-xl bg-neon-purple/20 flex items-center justify-center mb-4 group-hover:bg-neon-purple/30 transition-colors">
+                            <svg class="w-8 h-8 text-neon-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                        </div>
+                        <h3 class="font-display font-bold text-xl text-white mb-2">Own Land</h3>
+                        <p class="text-gray-400 text-sm">Purchase premium real estate in the city. Each plot is a unique NFT with strategic value.</p>
+                    </div>
+
+                    <div class="glass-panel rounded-2xl p-6 hover:scale-105 transition-transform cursor-pointer group">
+                        <div class="w-14 h-14 rounded-xl bg-neon-blue/20 flex items-center justify-center mb-4 group-hover:bg-neon-blue/30 transition-colors">
+                            <svg class="w-8 h-8 text-neon-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                        </div>
+                        <h3 class="font-display font-bold text-xl text-white mb-2">Trade Assets</h3>
+                        <p class="text-gray-400 text-sm">Buy, sell, and trade vehicles, skins, and businesses on the marketplace.</p>
+                    </div>
+
+                    <div class="glass-panel rounded-2xl p-6 hover:scale-105 transition-transform cursor-pointer group">
+                        <div class="w-14 h-14 rounded-xl bg-neon-pink/20 flex items-center justify-center mb-4 group-hover:bg-neon-pink/30 transition-colors">
+                            <svg class="w-8 h-8 text-neon-pink" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                        </div>
+                        <h3 class="font-display font-bold text-xl text-white mb-2">Build Business</h3>
+                        <p class="text-gray-400 text-sm">Establish enterprises, generate passive income, and dominate the market.</p>
+                    </div>
+
+                    <div class="glass-panel rounded-2xl p-6 hover:scale-105 transition-transform cursor-pointer group">
+                        <div class="w-14 h-14 rounded-xl bg-green-500/20 flex items-center justify-center mb-4 group-hover:bg-green-500/30 transition-colors">
+                            <svg class="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
+                        <h3 class="font-display font-bold text-xl text-white mb-2">Play & Earn</h3>
+                        <p class="text-gray-400 text-sm">Complete missions, race, and hustle to earn $BORI tokens and rare NFTs.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Featured NFTs -->
+            <div class="py-20 px-4 bg-brand-panel/30">
+                <div class="max-w-7xl mx-auto">
+                    <div class="flex justify-between items-end mb-8">
+                        <div>
+                            <h2 class="font-display text-3xl font-bold text-white mb-2">Featured <span class="text-neon-blue">Assets</span></h2>
+                            <p class="text-gray-400">Hot listings this week</p>
+                        </div>
+                        <button onclick="showSection('marketplace')" class="text-neon-blue hover:text-white transition-colors text-sm font-medium flex items-center gap-1">
+                            View All <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        </button>
+                    </div>
+
+                    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6" id="featuredGrid">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- MARKETPLACE SECTION -->
+        <section id="marketplace" class="section hidden">
+            <div class="flex flex-col lg:flex-row min-h-screen">
+                <!-- Sidebar Filters -->
+                <aside class="lg:w-64 glass border-r border-white/10 p-6 lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] overflow-y-auto">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="font-display font-bold text-white">Filters</h3>
+                        <button onclick="resetFilters()" class="text-xs text-neon-purple hover:text-white">Reset</button>
+                    </div>
+
+                    <!-- Search -->
+                    <div class="mb-6">
+                        <input type="text" id="searchInput" placeholder="Search assets..." 
+                            class="w-full bg-brand-dark border border-white/10 rounded-lg px-4 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-neon-purple transition-colors"
+                            oninput="applyFilters()">
+                    </div>
+
+                    <!-- Price Range -->
+                    <div class="mb-6">
+                        <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Price Range (SOL)</h4>
+                        <div class="flex gap-2">
+                            <input type="number" id="minPrice" placeholder="Min" class="w-full bg-brand-dark border border-white/10 rounded px-3 py-2 text-sm text-white focus:border-neon-purple outline-none" onchange="applyFilters()">
+                            <input type="number" id="maxPrice" placeholder="Max" class="w-full bg-brand-dark border border-white/10 rounded px-3 py-2 text-sm text-white focus:border-neon-purple outline-none" onchange="applyFilters()">
+                        </div>
+                    </div>
+
+                    <!-- Item Class -->
+                    <div class="mb-6">
+                        <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Item Class</h4>
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" class="filter-check hidden" value="Land" onchange="applyFilters()">
+                                <div class="w-4 h-4 rounded border border-white/20 flex items-center justify-center transition-all">
+                                    <div class="w-2 h-2 rounded-sm bg-neon-purple opacity-0 check-icon"></div>
+                                </div>
+                                <span class="text-sm text-gray-300">Land</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" class="filter-check hidden" value="Vehicle" onchange="applyFilters()">
+                                <div class="w-4 h-4 rounded border border-white/20 flex items-center justify-center transition-all">
+                                    <div class="w-2 h-2 rounded-sm bg-neon-purple opacity-0 check-icon"></div>
+                                </div>
+                                <span class="text-sm text-gray-300">Vehicle</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" class="filter-check hidden" value="Skin" onchange="applyFilters()">
+                                <div class="w-4 h-4 rounded border border-white/20 flex items-center justify-center transition-all">
+                                    <div class="w-2 h-2 rounded-sm bg-neon-purple opacity-0 check-icon"></div>
+                                </div>
+                                <span class="text-sm text-gray-300">Skin</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" class="filter-check hidden" value="Business" onchange="applyFilters()">
+                                <div class="w-4 h-4 rounded border border-white/20 flex items-center justify-center transition-all">
+                                    <div class="w-2 h-2 rounded-sm bg-neon-purple opacity-0 check-icon"></div>
+                                </div>
+                                <span class="text-sm text-gray-300">Business</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Rarity -->
+                    <div class="mb-6">
+                        <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Rarity</h4>
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" class="filter-check hidden" value="Legendary" onchange="applyFilters()">
+                                <div class="w-4 h-4 rounded border border-white/20 flex items-center justify-center transition-all">
+                                    <div class="w-2 h-2 rounded-sm bg-neon-purple opacity-0 check-icon"></div>
+                                </div>
+                                <span class="text-sm text-yellow-400">Legendary</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" class="filter-check hidden" value="Epic" onchange="applyFilters()">
+                                <div class="w-4 h-4 rounded border border-white/20 flex items-center justify-center transition-all">
+                                    <div class="w-2 h-2 rounded-sm bg-neon-purple opacity-0 check-icon"></div>
+                                </div>
+                                <span class="text-sm text-purple-400">Epic</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" class="filter-check hidden" value="Rare" onchange="applyFilters()">
+                                <div class="w-4 h-4 rounded border border-white/20 flex items-center justify-center transition-all">
+                                    <div class="w-2 h-2 rounded-sm bg-neon-purple opacity-0 check-icon"></div>
+                                </div>
+                                <span class="text-sm text-blue-400">Rare</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Collection -->
+                    <div class="mb-6">
+                        <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Collection</h4>
+                        <select id="collectionFilter" onchange="applyFilters()" class="w-full bg-brand-dark border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-neon-purple outline-none">
+                            <option value="">All Collections</option>
+                            <option value="Genesis">Genesis City</option>
+                            <option value="Neon">Neon District</option>
+                            <option value="Industrial">Industrial Zone</option>
+                            <option value="VIP">VIP Towers</option>
+                        </select>
+                    </div>
+                </aside>
+
+                <!-- Main Grid -->
+                <div class="flex-1 p-6">
+                    <!-- Toolbar -->
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                        <p class="text-gray-400 text-sm"><span id="itemCount" class="text-white font-bold">0</span> items found</p>
+                        
+                        <div class="flex items-center gap-3">
+                            <select id="sortSelect" onchange="applyFilters()" class="bg-brand-dark border border-white/10 rounded-lg px-4 py-2 text-sm text-white focus:border-neon-purple outline-none">
+                                <option value="newest">Newest Listed</option>
+                                <option value="price-low">Price: Low to High</option>
+                                <option value="price-high">Price: High to Low</option>
+                                <option value="rarity">Rarity</option>
+                            </select>
+                            
+                            <div class="flex border border-white/10 rounded-lg overflow-hidden">
+                                <button onclick="setView('grid')" id="gridViewBtn" class="p-2 bg-neon-purple/20 text-neon-purple">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                                </button>
+                                <button onclick="setView('list')" id="listViewBtn" class="p-2 text-gray-400 hover:text-white">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Grid -->
+                    <div id="marketplaceGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        <!-- Populated by JS -->
+                    </div>
+
+                    <!-- Pagination -->
+                    <div class="mt-8 flex justify-center gap-2" id="pagination">
+                        <button onclick="changePage(-1)" class="px-4 py-2 rounded-lg border border-white/10 hover:border-neon-purple text-gray-400 hover:text-white transition-colors">Previous</button>
+                        <span class="px-4 py-2 text-white font-mono" id="pageIndicator">Page 1 of 5</span>
+                        <button onclick="changePage(1)" class="px-4 py-2 rounded-lg border border-white/10 hover:border-neon-purple text-gray-400 hover:text-white transition-colors">Next</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ITEM DETAIL SECTION -->
+        <section id="itemDetail" class="section hidden">
+            <div class="max-w-7xl mx-auto px-4 py-8">
+                <button onclick="showSection('marketplace')" class="mb-6 text-gray-400 hover:text-white flex items-center gap-2 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                    Back to Marketplace
+                </button>
+
+                <div class="grid lg:grid-cols-2 gap-8" id="detailContent">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- MY COLLECTION SECTION -->
+        <section id="collection" class="section hidden">
+            <div class="max-w-7xl mx-auto px-4 py-8">
+                <div class="glass-panel rounded-2xl p-6 mb-8 border border-neon-purple/30">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div>
+                            <h2 class="font-display text-2xl font-bold text-white mb-1">My Collection</h2>
+                            <p class="text-gray-400 text-sm">Manage your CityScape assets</p>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="glass rounded-lg px-4 py-2 border border-white/10">
+                                <p class="text-xs text-gray-500 uppercase">Items Owned</p>
+                                <p class="text-xl font-bold text-white" id="ownedCount">0</p>
+                            </div>
+                            <div class="glass rounded-lg px-4 py-2 border border-white/10">
+                                <p class="text-xs text-gray-500 uppercase">Total Value</p>
+                                <p class="text-xl font-bold text-neon-blue" id="totalValue">0 SOL</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="collectionGrid" class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- Populated by JS -->
+                </div>
+
+                <div id="emptyCollection" class="hidden text-center py-20">
+                    <div class="w-24 h-24 mx-auto mb-4 rounded-full bg-white/5 flex items-center justify-center">
+                        <svg class="w-12 h-12 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                    </div>
+                    <h3 class="text-xl font-display font-bold text-white mb-2">No Assets Yet</h3>
+                    <p class="text-gray-400 mb-6">Start building your empire by acquiring land and assets</p>
+                    <button onclick="showSection('marketplace')" class="btn-primary px-6 py-3 rounded-full text-white font-bold">Browse Marketplace</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- MAP SECTION -->
+        <section id="map" class="section hidden">
+            <div class="h-[calc(100vh-4rem)] relative bg-brand-darker overflow-hidden">
+                <!-- Map Controls -->
+                <div class="absolute top-4 left-4 z-10 glass rounded-xl p-4 border border-white/10 max-w-xs">
+                    <h3 class="font-display font-bold text-white mb-4">City Map</h3>
+                    
+                    <div class="space-y-3 mb-4">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" checked class="accent-neon-purple" onchange="toggleMapLayer('available')">
+                            <span class="text-sm text-gray-300">Available</span>
+                            <div class="ml-auto w-3 h-3 rounded-full bg-green-400"></div>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" checked class="accent-neon-purple" onchange="toggleMapLayer('owned')">
+                            <span class="text-sm text-gray-300">Owned</span>
+                            <div class="ml-auto w-3 h-3 rounded-full bg-neon-purple"></div>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" checked class="accent-neon-purple" onchange="toggleMapLayer('vip')">
+                            <span class="text-sm text-gray-300">VIP Zones</span>
+                            <div class="ml-auto w-3 h-3 rounded-full bg-yellow-400"></div>
+                        </label>
+                    </div>
+
+                    <div class="border-t border-white/10 pt-3">
+                        <p class="text-xs text-gray-500 mb-2">Selected District</p>
+                        <p class="text-white font-bold" id="selectedDistrict">None</p>
+                        <p class="text-xs text-neon-blue mt-1" id="districtPrice"></p>
+                    </div>
+                </div>
+
+                <!-- Interactive SVG Map -->
+                <div class="w-full h-full flex items-center justify-center p-8 overflow-auto">
+                    <svg viewBox="0 0 800 600" class="w-full h-full max-w-5xl" id="cityMap">
+                        <!-- Background -->
+                        <rect width="800" height="600" fill="#0a0a0f"/>
+                        
+                        <!-- Grid -->
+                        <defs>
+                            <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(176, 38, 255, 0.1)" stroke-width="1"/>
+                            </pattern>
+                        </defs>
+                        <rect width="800" height="600" fill="url(#grid)"/>
+
+                        <!-- Districts -->
+                        <!-- Industrial Zone -->
+                        <g class="map-zone" data-name="Industrial Zone" data-price="From 15 SOL" onclick="selectDistrict(this)">
+                            <rect x="50" y="50" width="200" height="200" fill="rgba(100, 100, 100, 0.2)" stroke="#666" stroke-width="2"/>
+                            <text x="150" y="150" text-anchor="middle" fill="#999" font-size="14" font-family="Orbitron">INDUSTRIAL</text>
+                            <rect x="80" y="80" width="30" height="30" fill="rgba(0, 217, 255, 0.3)" stroke="#00d9ff"/>
+                            <rect x="140" y="100" width="40" height="40" fill="rgba(0, 217, 255, 0.3)" stroke="#00d9ff"/>
+                        </g>
+
+                        <!-- Neon District -->
+                        <g class="map-zone" data-name="Neon District" data-price="From 45 SOL" onclick="selectDistrict(this)">
+                            <rect x="300" y="50" width="250" height="250" fill="rgba(176, 38, 255, 0.15)" stroke="#b026ff" stroke-width="2"/>
+                            <text x="425" y="175" text-anchor="middle" fill="#b026ff" font-size="16" font-family="Orbitron" font-weight="bold">NEON DISTRICT</text>
+                            <circle cx="350" cy="120" r="20" fill="rgba(255, 0, 255, 0.3)" stroke="#ff00ff"/>
+                            <circle cx="480" cy="200" r="25" fill="rgba(255, 0, 255, 0.3)" stroke="#ff00ff"/>
+                            <rect x="400" y="100" width="50" height="80" fill="rgba(176, 38, 255, 0.2)" stroke="#b026ff"/>
+                        </g>
+
+                        <!-- VIP Towers -->
+                        <g class="map-zone" data-name="VIP Towers" data-price="From 120 SOL" onclick="selectDistrict(this)">
+                            <rect x="600" y="50" width="150" height="300" fill="rgba(255, 215, 0, 0.1)" stroke="#ffd700" stroke-width="2"/>
+                            <text x="675" y="200" text-anchor="middle" fill="#ffd700" font-size="14" font-family="Orbitron">VIP TOWERS</text>
+                            <rect x="620" y="80" width="30" height="100" fill="rgba(255, 215, 0, 0.2)" stroke="#ffd700"/>
+                            <rect x="670" y="60" width="30" height="120" fill="rgba(255, 215, 0, 0.2)" stroke="#ffd700"/>
+                            <rect x="720" y="90" width="20" height="90" fill="rgba(255, 215, 0, 0.2)" stroke="#ffd700"/>
+                        </g>
+
+                        <!-- Residential -->
+                        <g class="map-zone" data-name="Residential Area" data-price="From 25 SOL" onclick="selectDistrict(this)">
+                            <rect x="50" y="300" width="220" height="250" fill="rgba(0, 255, 136, 0.1)" stroke="#00ff88" stroke-width="2"/>
+                            <text x="160" y="425" text-anchor="middle" fill="#00ff88" font-size="14" font-family="Orbitron">RESIDENTIAL</text>
+                            <rect x="80" y="340" width="40" height="40" fill="rgba(0, 255, 136, 0.2)" stroke="#00ff88"/>
+                            <rect x="150" y="380" width="40" height="40" fill="rgba(0, 255, 136, 0.2)" stroke="#00ff88"/>
+                            <rect x="100" y="450" width="50" height="50" fill="rgba(0, 255, 136, 0.2)" stroke="#00ff88"/>
+                        </g>
+
+                        <!-- Business District -->
+                        <g class="map-zone" data-name="Business District" data-price="From 80 SOL" onclick="selectDistrict(this)">
+                            <rect x="300" y="350" width="450" height="200" fill="rgba(0, 217, 255, 0.1)" stroke="#00d9ff" stroke-width="2"/>
+                            <text x="525" y="450" text-anchor="middle" fill="#00d9ff" font-size="16" font-family="Orbitron" font-weight="bold">BUSINESS DISTRICT</text>
+                            <rect x="350" y="380" width="60" height="80" fill="rgba(0, 217, 255, 0.2)" stroke="#00d9ff"/>
+                            <rect x="450" y="400" width="80" height="100" fill="rgba(0, 217, 255, 0.2)" stroke="#00d9ff"/>
+                            <rect x="600" y="380" width="100" height="60" fill="rgba(0, 217, 255, 0.2)" stroke="#00d9ff"/>
+                        </g>
+
+                        <!-- Roads -->
+                        <line x1="0" y1="320" x2="800" y2="320" stroke="rgba(255,255,255,0.1)" stroke-width="20" stroke-dasharray="20,10"/>
+                        <line x1="290" y1="0" x2="290" y2="600" stroke="rgba(255,255,255,0.1)" stroke-width="20" stroke-dasharray="20,10"/>
+                    </svg>
+                </div>
+            </div>
+        </section>
+
+        <!-- GAME SECTION -->
+        <section id="game" class="section hidden">
+            <div class="relative min-h-screen flex items-center justify-center overflow-hidden">
+                <!-- Background -->
+                <div class="absolute inset-0 bg-gradient-to-b from-brand-darker to-brand-dark"></div>
+                <div class="absolute inset-0 grid-bg opacity-30"></div>
+                
+                <!-- Content -->
+                <div class="relative z-10 max-w-4xl mx-auto px-4 text-center">
+                    <div class="inline-block mb-6 px-4 py-1 rounded-full bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 text-sm font-bold tracking-wider">ALPHA COMING SOON</div>
+                    
+                    <h1 class="font-display text-5xl md:text-7xl font-black text-white mb-6">
+                        Enter the <span class="text-transparent bg-clip-text bg-gradient-to-r from-neon-purple to-neon-blue">City</span>
+                    </h1>
+                    
+                    <p class="text-xl text-gray-400 mb-12 max-w-2xl mx-auto">
+                        Experience the ultimate open-world Web3 game. Drive, build, trade, and hustle your way to the top in a living, breathing metropolis.
+                    </p>
+
+                    <!-- Game Preview Card -->
+                    <div class="glass-panel rounded-3xl p-2 mb-12 max-w-3xl mx-auto border border-neon-purple/30">
+                        <div class="bg-brand-darker rounded-2xl aspect-video flex items-center justify-center relative overflow-hidden group cursor-pointer">
+                            <div class="absolute inset-0 bg-gradient-to-br from-neon-purple/20 to-neon-blue/20"></div>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <div class="w-20 h-20 rounded-full bg-white/10 backdrop-blur flex items-center justify-center group-hover:scale-110 transition-transform border border-white/20">
+                                    <svg class="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                </div>
+                            </div>
+                            <div class="absolute bottom-4 left-4 text-left">
+                                <p class="text-white font-bold">Gameplay Trailer</p>
+                                <p class="text-sm text-gray-400">Watch the alpha footage</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Features Grid -->
+                    <div class="grid md:grid-cols-3 gap-6 mb-12">
+                        <div class="glass rounded-xl p-6 text-left border border-white/5">
+                            <div class="w-12 h-12 rounded-lg bg-neon-purple/20 flex items-center justify-center mb-4">
+                                <svg class="w-6 h-6 text-neon-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                            </div>
+                            <h3 class="font-display font-bold text-white mb-2">High Octane Racing</h3>
+                            <p class="text-sm text-gray-400">Street races with NFT vehicles. Upgrade, customize, and dominate the streets.</p>
+                        </div>
+                        <div class="glass rounded-xl p-6 text-left border border-white/5">
+                            <div class="w-12 h-12 rounded-lg bg-neon-blue/20 flex items-center justify-center mb-4">
+                                <svg class="w-6 h-6 text-neon-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                            </div>
+                            <h3 class="font-display font-bold text-white mb-2">Empire Building</h3>
+                            <p class="text-sm text-gray-400">Own businesses, collect rent, and expand your influence across districts.</p>
+                        </div>
+                        <div class="glass rounded-xl p-6 text-left border border-white/5">
+                            <div class="w-12 h-12 rounded-lg bg-neon-pink/20 flex items-center justify-center mb-4">
+                                <svg class="w-6 h-6 text-neon-pink" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                            </div>
+                            <h3 class="font-display font-bold text-white mb-2">Social Hustle</h3>
+                            <p class="text-sm text-gray-400">Form crews, compete in challenges, and rule the city together.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                        <button class="btn-primary px-8 py-4 rounded-full text-white font-display font-bold text-lg opacity-50 cursor-not-allowed" disabled>
+                            Download Client (Soon)
+                        </button>
+                        <button onclick="showSection('marketplace')" class="btn-secondary px-8 py-4 rounded-full font-display font-bold text-lg">
+                            Prepare Your Assets
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="glass border-t border-white/10 py-12 px-4">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid md:grid-cols-4 gap-8 mb-8">
+                <div>
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="w-8 h-8 rounded bg-gradient-to-br from-neon-purple to-neon-blue flex items-center justify-center font-display font-bold text-white">C</div>
+                        <span class="font-display font-bold text-white">CityScape Hustle</span>
+                    </div>
+                    <p class="text-gray-500 text-sm">The future of Web3 gaming. Own your city, rule the streets.</p>
+                </div>
+                <div>
+                    <h4 class="font-display font-bold text-white mb-4">Game</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="#" onclick="showSection('marketplace')" class="hover:text-neon-purple transition-colors">Marketplace</a></li>
+                        <li><a href="#" onclick="showSection('map')" class="hover:text-neon-purple transition-colors">City Map</a></li>
+                        <li><a href="#" onclick="showSection('collection')" class="hover:text-neon-purple transition-colors">My Collection</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-display font-bold text-white mb-4">Resources</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="#" class="hover:text-neon-purple transition-colors">Litepaper</a></li>
+                        <li><a href="#" class="hover:text-neon-purple transition-colors">Documentation</a></li>
+                        <li><a href="#" class="hover:text-neon-purple transition-colors">Brand Kit</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-display font-bold text-white mb-4">Connect</h4>
+                    <div class="flex gap-4">
+                        <a href="#" class="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center hover:bg-neon-purple/20 hover:text-neon-purple transition-all text-gray-400">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                        </a>
+                        <a href="#" class="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center hover:bg-neon-purple/20 hover:text-neon-purple transition-all text-gray-400">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+                        </a>
+                        <a href="#" class="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center hover:bg-neon-purple/20 hover:text-neon-purple transition-all text-gray-400">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+                <p class="text-gray-600 text-sm">© 2026 CityScape Hustle. All rights reserved.</p>
+                <div class="flex gap-6 text-sm text-gray-600">
+                    <a href="#" class="hover:text-white transition-colors">Terms of Service</a>
+                    <a href="#" class="hover:text-white transition-colors">Privacy Policy</a>
+                    <a href="#" class="hover:text-white transition-colors">NFT Disclaimer</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // State Management
+        const state = {
+            wallet: null,
+            publicKey: null,
+            connection: null,
+            currentPage: 1,
+            itemsPerPage: 12,
+            viewMode: 'grid',
+            filters: {
+                search: '',
+                minPrice: null,
+                maxPrice: null,
+                classes: [],
+                rarities: [],
+                collection: ''
+            },
+            ownedItems: [],
+            listings: []
+        };
+
+        // Initialize Solana Connection
+        function initSolana() {
+            state.connection = new solanaWeb3.Connection('https://api.devnet.solana.com', 'confirmed');
+        }
+        initSolana();
+
+        // Mock Data Generation
+        function generateMockData() {
+            const classes = ['Land', 'Vehicle', 'Skin', 'Business'];
+            const rarities = ['Common', 'Uncommon', 'Rare', 'Epic', 'Legendary'];
+            const collections = ['Genesis City', 'Neon District', 'Industrial Zone', 'VIP Towers'];
+            const names = {
+                'Land': ['Downtown Plot', 'Skyscraper Base', 'Corner Store', 'Warehouse', 'Penthouse', 'Garage', 'Studio Loft'],
+                'Vehicle': ['Neon Rider', 'Cyber Truck', 'Hustler Bike', 'Drift King', 'Speed Demon', 'Armored Van'],
+                'Skin': ['Neon Punk', 'Corp Suit', 'Street Wear', 'VIP Tux', 'Racer Gear', 'Hacker Hoodie'],
+                'Business': ['Nightclub', 'Auto Shop', 'Casino', 'Data Center', 'Restaurant', 'Gym']
+            };
+
+            state.listings = Array.from({ length: 48 }, (_, i) => {
+                const cls = classes[Math.floor(Math.random() * classes.length)];
+                const rarity = rarities[Math.floor(Math.random() * rarities.length)];
+                const name = names[cls][Math.floor(Math.random() * names[cls].length)];
+                const price = (Math.random() * 50 + 0.5).toFixed(2);
+                
+                return {
+                    id: i + 1,
+                    name: `${name} #${1000 + i}`,
+                    type: cls,
+                    rarity: rarity,
+                    collection: collections[Math.floor(Math.random() * collections.length)],
+                    price: parseFloat(price),
+                    image: `https://placehold.co/400x400/1a1a2e/b026ff?text=${encodeURIComponent(name)}&font=orbitron`,
+                    tokenId: `CSH${100000 + i}`,
+                    description: `A premium ${cls.toLowerCase()} asset in the CityScape Hustle metaverse. ${rarity} tier with unique attributes.`,
+                    attributes: {
+                        level: Math.floor(Math.random() * 10) + 1,
+                        district: ['Neon', 'Industrial', 'VIP', 'Residential'][Math.floor(Math.random() * 4)],
+                        yield: Math.floor(Math.random() * 100) + '%'
+                    }
+                };
+            });
+        }
+        generateMockData();
+
+        // Wallet Functions
+        function isPhantomInstalled() {
+            return window.solana && window.solana.isPhantom;
+        }
+
+        async function toggleWallet() {
+            if (!isPhantomInstalled()) {
+                showToast('error', 'Phantom Not Found', 'Please install Phantom wallet');
+                window.open('https://phantom.app/', '_blank');
+                return;
+            }
+
+            if (state.wallet) {
+                toggleWalletDropdown();
+            } else {
+                await connectWallet();
+            }
+        }
+
+        async function connectWallet() {
+            try {
+                const { solana } = window;
+                const response = await solana.connect();
+                state.publicKey = response.publicKey;
+                state.wallet = solana;
+                
+                updateWalletUI();
+                showToast('success', 'Connected', `Welcome, ${shortenAddress(state.publicKey.toString())}`);
+                
+                solana.on('accountChanged', (newPublicKey) => {
+                    if (newPublicKey) {
+                        state.publicKey = newPublicKey;
+                        updateWalletUI();
+                    } else {
+                        disconnectWallet();
+                    }
+                });
+            } catch (err) {
+                showToast('error', 'Connection Failed', err.message);
+            }
+        }
+
+        function disconnectWallet() {
+            if (state.wallet) state.wallet.disconnect();
+            state.wallet = null;
+            state.publicKey = null;
+            
+            document.getElementById('connectBtn').classList.remove('hidden');
+            document.getElementById('walletInfo').classList.add('hidden');
+            document.getElementById('walletDropdown').classList.add('hidden');
+            
+            showToast('info', 'Disconnected', 'Wallet disconnected');
+        }
+
+        async function updateWalletUI() {
+            if (!state.publicKey) return;
+            
+            document.getElementById('connectBtn').classList.add('hidden');
+            document.getElementById('walletInfo').classList.remove('hidden');
+            document.getElementById('walletAddress').textContent = shortenAddress(state.publicKey.toString());
+            document.getElementById('networkBadge').classList.remove('hidden');
+            
+            try {
+                const balance = await state.connection.getBalance(state.publicKey);
+                document.getElementById('solBalance').textContent = (balance / solanaWeb3.LAMPORTS_PER_SOL).toFixed(4);
+            } catch (e) {
+                document.getElementById('solBalance').textContent = '0.00';
+            }
+            
+            loadCollection();
+        }
+
+        function toggleWalletDropdown() {
+            const dropdown = document.getElementById('walletDropdown');
+            dropdown.classList.toggle('hidden');
+        }
+
+        function viewExplorer() {
+            if (state.publicKey) {
+                window.open(`https://explorer.solana.com/address/${state.publicKey.toString()}?cluster=devnet`, '_blank');
+            }
+        }
+
+        // Navigation
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(s => {
+                s.classList.add('hidden');
+                s.classList.remove('active');
+            });
+            
+            // Show target
+            const target = document.getElementById(sectionId);
+            if (target) {
+                target.classList.remove('hidden');
+                target.classList.add('active');
+                window.scrollTo(0, 0);
+            }
+            
+            // Close mobile menu
+            document.getElementById('mobileMenu').classList.add('hidden');
+            
+            // Special init
+            if (sectionId === 'marketplace') renderMarketplace();
+            if (sectionId === 'home') renderFeatured();
+        }
+
+        function toggleMobileMenu() {
+            document.getElementById('mobileMenu').classList.toggle('hidden');
+        }
+
+        // Marketplace Functions
+        function renderMarketplace() {
+            const grid = document.getElementById('marketplaceGrid');
+            const filtered = getFilteredItems();
+            const start = (state.currentPage - 1) * state.itemsPerPage;
+            const pageItems = filtered.slice(start, start + state.itemsPerPage);
+            
+            document.getElementById('itemCount').textContent = filtered.length;
+            document.getElementById('pageIndicator').textContent = `Page ${state.currentPage} of ${Math.ceil(filtered.length / state.itemsPerPage)}`;
+            
+            grid.innerHTML = pageItems.map(item => createItemCard(item)).join('');
+        }
+
+        function createItemCard(item) {
+            const rarityColors = {
+                'Legendary': 'text-yellow-400 border-yellow-400/30 bg-yellow-400/10',
+                'Epic': 'text-purple-400 border-purple-400/30 bg-purple-400/10',
+                'Rare': 'text-blue-400 border-blue-400/30 bg-blue-400/10',
+                'Uncommon': 'text-green-400 border-green-400/30 bg-green-400/10',
+                'Common': 'text-gray-400 border-gray-400/30 bg-gray-400/10'
+            };
+            
+            const style = rarityColors[item.rarity] || rarityColors['Common'];
+            
+            return `
+                <div class="nft-card glass-panel rounded-xl overflow-hidden border border-white/5 cursor-pointer group" onclick="showItemDetail(${item.id})">
+                    <div class="aspect-square relative overflow-hidden bg-brand-darker">
+                        <img src="${item.image}" alt="${item.name}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                        <div class="absolute top-2 right-2">
+                            <span class="px-2 py-1 rounded text-xs font-bold border ${style}">${item.rarity}</span>
+                        </div>
+                        <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+                            <p class="text-xs text-gray-400">${item.collection}</p>
+                        </div>
+                    </div>
+                    <div class="p-4">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-display font-bold text-white text-sm truncate">${item.name}</h3>
+                        </div>
+                        <p class="text-xs text-gray-500 mb-3">${item.type}</p>
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="text-xs text-gray-500">Price</p>
+                                <p class="text-neon-blue font-bold font-mono">${item.price} SOL</p>
+                            </div>
+                            <button class="btn-primary px-3 py-1.5 rounded-lg text-xs font-bold text-white">Buy</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function getFilteredItems() {
+            return state.listings.filter(item => {
+                if (state.filters.search && !item.name.toLowerCase().includes(state.filters.search.toLowerCase())) return false;
+                if (state.filters.minPrice && item.price < state.filters.minPrice) return false;
+                if (state.filters.maxPrice && item.price > state.filters.maxPrice) return false;
+                if (state.filters.classes.length && !state.filters.classes.includes(item.type)) return false;
+                if (state.filters.rarities.length && !state.filters.rarities.includes(item.rarity)) return false;
+                if (state.filters.collection && item.collection !== state.filters.collection) return false;
+                return true;
+            }).sort((a, b) => {
+                const sort = document.getElementById('sortSelect').value;
+                if (sort === 'price-low') return a.price - b.price;
+                if (sort === 'price-high') return b.price - a.price;
+                if (sort === 'rarity') {
+                    const r = {'Legendary': 5, 'Epic': 4, 'Rare': 3, 'Uncommon': 2, 'Common': 1};
+                    return r[b.rarity] - r[a.rarity];
+                }
+                return b.id - a.id;
+            });
+        }
+
+        function applyFilters() {
+            state.filters.search = document.getElementById('searchInput').value;
+            state.filters.minPrice = parseFloat(document.getElementById('minPrice').value) || null;
+            state.filters.maxPrice = parseFloat(document.getElementById('maxPrice').value) || null;
+            state.filters.collection = document.getElementById('collectionFilter').value;
+            
+            state.filters.classes = Array.from(document.querySelectorAll('.filter-check:checked'))
+                .filter(cb => ['Land', 'Vehicle', 'Skin', 'Business'].includes(cb.value))
+                .map(cb => cb.value);
+                
+            state.filters.rarities = Array.from(document.querySelectorAll('.filter-check:checked'))
+                .filter(cb => ['Legendary', 'Epic', 'Rare'].includes(cb.value))
+                .map(cb => cb.value);
+            
+            state.currentPage = 1;
+            renderMarketplace();
+        }
+
+        function resetFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('minPrice').value = '';
+            document.getElementById('maxPrice').value = '';
+            document.getElementById('collectionFilter').value = '';
+            document.querySelectorAll('.filter-check').forEach(cb => cb.checked = false);
+            applyFilters();
+        }
+
+        function changePage(dir) {
+            const maxPage = Math.ceil(getFilteredItems().length / state.itemsPerPage);
+            state.currentPage = Math.max(1, Math.min(maxPage, state.currentPage + dir));
+            renderMarketplace();
+        }
+
+        function setView(mode) {
+            state.viewMode = mode;
+            document.getElementById('gridViewBtn').classList.toggle('text-neon-purple', mode === 'grid');
+            document.getElementById('listViewBtn').classList.toggle('text-neon-purple', mode === 'list');
+        }
+
+        // Item Detail
+        function showItemDetail(id) {
+            const item = state.listings.find(i => i.id === id);
+            if (!item) return;
+            
+            const content = document.getElementById('detailContent');
+            content.innerHTML = `
+                <div class="space-y-6">
+                    <div class="glass-panel rounded-2xl overflow-hidden border border-neon-purple/20">
+                        <img src="${item.image}" alt="${item.name}" class="w-full aspect-square object-cover">
+                    </div>
+                </div>
+                <div class="space-y-6">
+                    <div>
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="px-3 py-1 rounded-full text-xs font-bold bg-neon-purple/20 text-neon-purple border border-neon-purple/30">${item.rarity}</span>
+                            <span class="px-3 py-1 rounded-full text-xs font-bold bg-white/5 text-gray-400 border border-white/10">${item.type}</span>
+                        </div>
+                        <h1 class="font-display text-4xl font-bold text-white mb-2">${item.name}</h1>
+                        <p class="text-gray-400">${item.collection}</p>
+                    </div>
+                    
+                    <div class="glass rounded-xl p-6 border border-white/10">
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-gray-400">Current Price</span>
+                            <span class="text-3xl font-display font-bold text-neon-blue">${item.price} SOL</span>
+                        </div>
+                        <button onclick="buyItem(${item.id})" class="w-full btn-primary py-4 rounded-xl text-white font-bold text-lg flex items-center justify-center gap-2 ${!state.wallet ? 'opacity-50' : ''}">
+                            ${state.wallet ? 'Buy Now' : 'Connect Wallet to Buy'}
+                        </button>
+                    </div>
+                    
+                    <div class="glass rounded-xl p-6 border border-white/10">
+                        <h3 class="font-display font-bold text-white mb-4">Attributes</h3>
+                        <div class="grid grid-cols-3 gap-4">
+                            <div class="bg-white/5 rounded-lg p-3 text-center">
+                                <p class="text-xs text-gray-500 mb-1">Level</p>
+                                <p class="text-neon-purple font-bold">${item.attributes.level}</p>
+                            </div>
+                            <div class="bg-white/5 rounded-lg p-3 text-center">
+                                <p class="text-xs text-gray-500 mb-1">District</p>
+                                <p class="text-neon-blue font-bold">${item.attributes.district}</p>
+                            </div>
+                            <div class="bg-white/5 rounded-lg p-3 text-center">
+                                <p class="text-xs text-gray-500 mb-1">Yield</p>
+                                <p class="text-green-400 font-bold">${item.attributes.yield}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="glass rounded-xl p-6 border border-white/10">
+                        <h3 class="font-display font-bold text-white mb-2">Description</h3>
+                        <p class="text-gray-400 text-sm leading-relaxed">${item.description}</p>
+                    </div>
+                    
+                    <div class="flex items-center justify-between text-sm text-gray-500 font-mono">
+                        <span>Token ID: ${item.tokenId}</span>
+                        <button onclick="navigator.clipboard.writeText('${item.tokenId}')" class="text-neon-purple hover:text-white">Copy</button>
+                    </div>
+                </div>
+            `;
+            
+            showSection('itemDetail');
+        }
+
+        async function buyItem(id) {
+            if (!state.wallet) {
+                connectWallet();
+                return;
+            }
+            
+            const item = state.listings.find(i => i.id === id);
+            const modal = document.getElementById('txModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            try {
+                // Simulate transaction
+                await new Promise(r => setTimeout(r, 2000));
+                
+                // Add to owned
+                state.ownedItems.push({...item, purchasePrice: item.price, purchaseDate: new Date()});
+                state.listings = state.listings.filter(i => i.id !== id);
+                
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                showToast('success', 'Purchase Successful!', `You now own ${item.name}`);
+                showSection('collection');
+            } catch (err) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                showToast('error', 'Transaction Failed', err.message);
+            }
+        }
+
+        // Collection
+        function loadCollection() {
+            const grid = document.getElementById('collectionGrid');
+            const empty = document.getElementById('emptyCollection');
+            
+            document.getElementById('ownedCount').textContent = state.ownedItems.length;
+            const total = state.ownedItems.reduce((sum, item) => sum + item.purchasePrice, 0);
+            document.getElementById('totalValue').textContent = `${total.toFixed(2)} SOL`;
+            
+            if (state.ownedItems.length === 0) {
+                grid.innerHTML = '';
+                empty.classList.remove('hidden');
+                return;
+            }
+            
+            empty.classList.add('hidden');
+            grid.innerHTML = state.ownedItems.map(item => `
+                <div class="glass-panel rounded-xl overflow-hidden border border-white/5">
+                    <div class="aspect-square relative bg-brand-darker">
+                        <img src="${item.image}" class="w-full h-full object-cover">
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-display font-bold text-white text-sm mb-1">${item.name}</h3>
+                        <p class="text-xs text-gray-500 mb-3">${item.type}</p>
+                        <div class="flex gap-2">
+                            <button class="flex-1 btn-secondary py-2 rounded-lg text-xs font-bold">List for Sale</button>
+                            <button class="flex-1 bg-white/5 hover:bg-white/10 py-2 rounded-lg text-xs font-bold text-white transition-colors">Use in Game</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Map
+        function selectDistrict(element) {
+            const name = element.getAttribute('data-name');
+            const price = element.getAttribute('data-price');
+            document.getElementById('selectedDistrict').textContent = name;
+            document.getElementById('districtPrice').textContent = price;
+            
+            // Visual feedback
+            document.querySelectorAll('.map-zone').forEach(z => z.style.opacity = '0.5');
+            element.style.opacity = '1';
+        }
+
+        function toggleMapLayer(layer) {
+            // In real implementation, this would toggle visibility of map layers
+            showToast('info', 'Map Filter', `${layer} layer toggled`);
+        }
+
+        // Utilities
+        function shortenAddress(addr) {
+            return `${addr.slice(0, 4)}...${addr.slice(-4)}`;
+        }
+
+        function showToast(type, title, message) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            
+            const colors = {
+                success: 'border-green-500 text-green-400',
+                error: 'border-red-500 text-red-400',
+                info: 'border-neon-blue text-neon-blue'
+            };
+            
+            toast.className = `toast glass border-l-4 ${colors[type]} rounded-xl p-4 shadow-2xl max-w-sm`;
+            toast.innerHTML = `
+                <div class="flex items-start gap-3">
+                    <div class="text-xl">${type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ'}</div>
+                    <div>
+                        <h4 class="font-bold text-white mb-1">${title}</h4>
+                        <p class="text-sm text-gray-400">${message}</p>
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.add('show'), 10);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function renderFeatured() {
+            const featured = state.listings.slice(0, 4);
+            document.getElementById('featuredGrid').innerHTML = featured.map(item => createItemCard(item)).join('');
+        }
+
+        // Initialize
+        window.addEventListener('load', () => {
+            renderFeatured();
+            
+            // Check existing connection
+            if (isPhantomInstalled() && window.solana.isConnected) {
+                state.publicKey = window.solana.publicKey;
+                state.wallet = window.solana;
+                updateWalletUI();
+            }
+        });
+
+        // Checkbox styling helper
+        document.addEventListener('change', (e) => {
+            if (e.target.classList.contains('filter-check')) {
+                const icon = e.target.nextElementSibling.querySelector('.check-icon');
+                if (e.target.checked) {
+                    icon.classList.remove('opacity-0');
+                } else {
+                    icon.classList.add('opacity-0');
+                }
+            }
+        });
+    </script>
+</body>
+</html>
